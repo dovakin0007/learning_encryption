@@ -3,12 +3,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyparser = require('body-parser');
 const ejs = require('ejs');
+const md5 = require('md5');
 const encryption = require('mongoose-encryption');
 app = new express();
 app.use(bodyparser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 app.use(express.static("public"));
 mongoose.connect("mongodb://localhost:27017/usersDB");
+
 NewSchema = mongoose.Schema;
 
 Schema = new NewSchema({
@@ -22,7 +24,7 @@ Schema = new NewSchema({
     }
 });
 
-Schema.plugin(encryption, { secret: process.env.SECRET, encryptedFields: ["password"] })
+
 
 const User = mongoose.model("User", Schema)
 
@@ -41,7 +43,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
     const NewUser = new User({
         emailid: req.body.username,
-        password: req.body.password
+        password: md5(req.body.password)
     })
     NewUser.save((err) => {
         try {
@@ -59,7 +61,7 @@ app.post('/login', (req, res) => {
 
     User.findOne({ email: email }, function(err, user) {
         try {
-            if (user.password === password) {
+            if (user.password === md5(password)) {
                 res.render("secrets");
             } else {
                 console.log("password mismatch");
